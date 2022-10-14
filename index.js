@@ -8,20 +8,16 @@
 // Dependencies
 const http = require('http');
 const { handleReqRes } = require('./helpers/handleReqRes');
+const environment = require('./helpers/enviroments');
 
 // app object - module scafollding
 const app = {};
 
-// configarations
-app.config = {
-    port: 3000,
-};
-
 // create server
 app.createServer = () => {
     const server = http.createServer(app.handleReqRes);
-    server.listen(app.config.port, () => {
-        console.log(`server is listen on port ${app.config.port}`);
+    server.listen(environment.port, () => {
+        console.log(`server is listen on port ${environment.port}`);
     });
 };
 
