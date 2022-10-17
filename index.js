@@ -14,8 +14,14 @@ const data = require('./lib/data');
 // app object - module scafollding
 const app = {};
 
-data.create('test', 'newFile', { name: 'Bangladesh', language: 'Bangla' }, (error) => {
-    console.log(error);
+// create file
+// data.create('test', 'newFile', { name: 'Bangladesh', language: 'Bangla' }, (error) => {
+//     console.log(error);
+// });
+
+// read file
+data.read('test', 'newFile', (error, result) => {
+    console.log(error, result);
 });
 
 // create server
