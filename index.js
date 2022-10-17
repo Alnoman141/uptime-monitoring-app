@@ -25,7 +25,12 @@ const app = {};
 // });
 
 // update the file
-data.update('test', 'newFile', { name: 'noman', age: 27 }, (error) => {
+// data.update('test', 'newFile', { name: 'noman', age: 27 }, (error) => {
+//     console.log(error);
+// });
+
+// delete the exsisting the file
+data.delete('test', 'newFile', (error) => {
     console.log(error);
 });
 
