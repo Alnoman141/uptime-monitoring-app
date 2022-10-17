@@ -20,8 +20,13 @@ const app = {};
 // });
 
 // read file
-data.read('test', 'newFile', (error, result) => {
-    console.log(error, result);
+// data.read('test', 'newFile', (error, result) => {
+//     console.log(error, result);
+// });
+
+// update the file
+data.update('test', 'newFile', { name: 'noman', age: 27 }, (error) => {
+    console.log(error);
 });
 
 // create server
