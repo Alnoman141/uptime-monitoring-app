@@ -8,11 +8,13 @@
 // dependencies
 const { sampelHandler } = require('./handlers/routeHandlers/sampleHandler');
 const { userHandler } = require('./handlers/routeHandlers/userHandler');
+const { tokenHandler } = require('./handlers/routeHandlers/tokenHandler');
 
 // module scafolding
 const routes = {
     sample: sampelHandler,
     user: userHandler,
+    token: tokenHandler,
 };
 
 module.exports = routes;
