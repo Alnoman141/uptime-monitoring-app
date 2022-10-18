@@ -14,26 +14,6 @@ const data = require('./lib/data');
 // app object - module scafollding
 const app = {};
 
-// create file
-// data.create('test', 'newFile', { name: 'Bangladesh', language: 'Bangla' }, (error) => {
-//     console.log(error);
-// });
-
-// read file
-// data.read('test', 'newFile', (error, result) => {
-//     console.log(error, result);
-// });
-
-// update the file
-// data.update('test', 'newFile', { name: 'noman', age: 27 }, (error) => {
-//     console.log(error);
-// });
-
-// delete the exsisting the file
-data.delete('test', 'newFile', (error) => {
-    console.log(error);
-});
-
 // create server
 app.createServer = () => {
     const server = http.createServer(app.handleReqRes);
