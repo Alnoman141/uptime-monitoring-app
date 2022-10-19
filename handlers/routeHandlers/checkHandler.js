@@ -28,7 +28,40 @@ handler.checkHandler = (requestProperties, callback) => {
 handler._checks = {};
 
 // get a single check by phone number
-handler._checks.get = (requestProperties, callback) => {};
+handler._checks.get = (requestProperties, callback) => {
+    // request validation
+    const protocol =
+        typeof requestProperties.body.protocol === 'string' &&
+        ['http', 'https'].indexOf(requestProperties.body.protocol) > -1
+            ? requestProperties.body.protocol
+            : false;
+
+    const method =
+        typeof requestProperties.body.method === 'string' &&
+        ['get', 'post', 'put', 'delete'].indexOf(typeof requestProperties.body.method) > -1
+            ? typeof requestProperties.body.method
+            : false;
+
+    const url =
+        typeof requestProperties.body.url === 'string' &&
+        requestProperties.body.url.trim().length > 0
+            ? requestProperties.body.url
+            : false;
+
+    const successCodes =
+        typeof requestProperties.body.successCodes === 'object' &&
+        requestProperties.body.successCodes instanceof Array
+            ? requestProperties.body.successCodes
+            : false;
+
+    const timeout =
+        typeof requestProperties.body.timeout === 'number' &&
+        requestProperties.body.timeout % 1 === 0 &&
+        requestProperties.body.timeout >= 1 &&
+        requestProperties.body.timeout <= 5
+            ? requestProperties.body.timeout
+            : false;
+};
 
 handler._checks.post = (requestProperties, callback) => {};
 
