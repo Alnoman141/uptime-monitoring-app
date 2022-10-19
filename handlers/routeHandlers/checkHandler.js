@@ -7,8 +7,7 @@
 
 // dependencies
 const data = require('../../lib/data');
-const { hash } = require('../../helpers/utilities');
-const { parseJSON } = require('../../helpers/utilities');
+const { parseJSON, createRandomString } = require('../../helpers/utilities');
 const tokenHandler = require('./tokenHandler');
 const { maxCheckLimit } = require('../../helpers/enviroments');
 
@@ -29,7 +28,9 @@ handler.checkHandler = (requestProperties, callback) => {
 handler._checks = {};
 
 // get a single check by phone number
-handler._checks.get = (requestProperties, callback) => {
+handler._checks.get = (requestProperties, callback) => {};
+
+handler._checks.post = (requestProperties, callback) => {
     // request validation
     const protocol =
         typeof requestProperties.body.protocol === 'string' &&
@@ -39,7 +40,7 @@ handler._checks.get = (requestProperties, callback) => {
 
     const method =
         typeof requestProperties.body.method === 'string' &&
-        ['get', 'post', 'put', 'delete'].indexOf(typeof requestProperties.body.method) > -1
+        ['GET', 'POST', 'PUT', 'DELETE'].indexOf(requestProperties.body.method) > -1
             ? typeof requestProperties.body.method
             : false;
 
@@ -81,14 +82,46 @@ handler._checks.get = (requestProperties, callback) => {
                         // verify the token
                         tokenHandler._token.verify(token, userPhone, (isTokenValid) => {
                             if (isTokenValid) {
-                                const userObject = { ...parseJSON(userData) };
+                                const userObject = parseJSON(userData);
                                 const userChecks =
                                     typeof userObject.checks === 'object' &&
                                     userObject.checks instanceof Array
                                         ? userObject.checks
                                         : [];
                                 if (userChecks.length < maxCheckLimit) {
-
+                                    const checkId = createRandomString(20);
+                                    const checkObject = {
+                                        id: checkId,
+                                        userPhone,
+                                        protocol,
+                                        method,
+                                        url,
+                                        successCodes,
+                                        timeout,
+                                    };
+                                    // save check to the checks folder
+                                    data.create('checks', checkId, checkObject, (err3) => {
+                                        if (!err3) {
+                                            userObject.checks = userChecks;
+                                            userObject.checks.push(checkId);
+                                            data.update('users', userPhone, userObject, (err4) => {
+                                                if (!err4) {
+                                                    callback(200, {
+                                                        message: 'Check was created successfully!',
+                                                        check: checkObject,
+                                                    });
+                                                } else {
+                                                    callback(500, {
+                                                        error: 'Error to updating user!',
+                                                    });
+                                                }
+                                            });
+                                        } else {
+                                            callback(500, {
+                                                error: 'Error to creating check!',
+                                            });
+                                        }
+                                    });
                                 } else {
                                     callback(401, {
                                         error: 'User has already reached max checks limit!',
@@ -119,8 +152,6 @@ handler._checks.get = (requestProperties, callback) => {
         });
     }
 };
-
-handler._checks.post = (requestProperties, callback) => {};
 
 handler._checks.put = (requestProperties, callback) => {
     // check the phone number if valid
