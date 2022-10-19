@@ -61,6 +61,49 @@ handler._checks.get = (requestProperties, callback) => {
         requestProperties.body.timeout <= 5
             ? requestProperties.body.timeout
             : false;
+    // check user input is valid or not
+    if (protocol && method && url && successCodes && timeout) {
+        // check authentication
+        const token =
+            typeof requestProperties.headerObject.token === 'string' &&
+            requestProperties.headerObject.token.trim().length === 20
+                ? requestProperties.headerObject.token
+                : false;
+        // get user by the tokenData by the token and the phone number according to the token
+        data.read('tokens', token, (err1, tokenData) => {
+            if (!err1 && tokenData) {
+                const tokenObject = { ...parseJSON(tokenData) };
+                const userPhone = tokenObject.phone;
+                // get user by the phone number
+                data.read('users', userPhone, (err2, userData) => {
+                    if (!err2 && userData) {
+                        // verify the token
+                        tokenHandler._token.verify(token, userPhone, (isTokenValid) => {
+                            if (isTokenValid) {
+                                const userObject = { ...parseJSON(userData) };
+                            } else {
+                                callback(401, {
+                                    error: 'Unauthenticated!',
+                                });
+                            }
+                        });
+                    } else {
+                        callback(401, {
+                            error: 'Authentication error!',
+                        });
+                    }
+                });
+            } else {
+                callback(401, {
+                    error: 'Authentication error!',
+                });
+            }
+        });
+    } else {
+        callback(400, {
+            error: 'There was a problem in your request!',
+        });
+    }
 };
 
 handler._checks.post = (requestProperties, callback) => {};
