@@ -297,6 +297,97 @@ handler._checks.put = (requestProperties, callback) => {
     }
 };
 
-handler._checks.delete = (requestProperties, callback) => {};
+handler._checks.delete = (requestProperties, callback) => {
+    const checkID =
+        typeof requestProperties.queryString.check_id === 'string' &&
+        requestProperties.queryString.check_id.trim().length === 20
+            ? requestProperties.queryString.check_id
+            : false;
+    if (checkID) {
+        // look up the check
+        data.read('checks', checkID, (err1, checkData) => {
+            if (!err1 && checkData) {
+                const checkObject = parseJSON(checkData);
+                // verify token
+                const token =
+                    typeof requestProperties.headerObject.token === 'string' &&
+                    requestProperties.headerObject.token.trim().length === 20
+                        ? requestProperties.headerObject.token
+                        : false;
+                if (token) {
+                    tokenHandler._token.verify(token, checkObject.userPhone, (isValidToken) => {
+                        if (isValidToken) {
+                            data.delete('checks', checkID, (err2) => {
+                                if (!err2) {
+                                    data.read('users', checkObject.userPhone, (err3, userData) => {
+                                        if (!err3 && userData) {
+                                            const userObject = parseJSON(userData);
+                                            const userChecks =
+                                                typeof userObject.checks === 'object' &&
+                                                userObject.checks instanceof Array
+                                                    ? userObject.checks
+                                                    : [];
+                                            const checkIDPosition = userChecks.indexOf(checkID);
+                                            if (checkIDPosition > -1) {
+                                                userChecks.splice(checkIDPosition, 1);
+                                                userObject.checks = userChecks;
+                                                // update user data
+                                                data.update(
+                                                    'users',
+                                                    checkObject.userPhone,
+                                                    userObject,
+                                                    (err4) => {
+                                                        if (!err4) {
+                                                            callback(200, {
+                                                                message:
+                                                                    'Token deleted successfully',
+                                                            });
+                                                        } else {
+                                                            callback(500, {
+                                                                error: 'Server error!',
+                                                            });
+                                                        }
+                                                    },
+                                                );
+                                            } else {
+                                                callback(500, {
+                                                    error: 'Server error!',
+                                                });
+                                            }
+                                        } else {
+                                            callback(500, {
+                                                error: 'Server error!',
+                                            });
+                                        }
+                                    });
+                                } else {
+                                    callback(500, {
+                                        error: 'Error to deleting check!',
+                                    });
+                                }
+                            });
+                        } else {
+                            callback(403, {
+                                error: 'Authentication error!',
+                            });
+                        }
+                    });
+                } else {
+                    callback(403, {
+                        error: 'Authentication error!',
+                    });
+                }
+            } else {
+                callback(500, {
+                    error: 'There was a problem in your request!',
+                });
+            }
+        });
+    } else {
+        callback(400, {
+            error: 'There was a problem in your request!',
+        });
+    }
+};
 
 module.exports = handler;
