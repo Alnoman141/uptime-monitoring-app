@@ -28,7 +28,50 @@ handler.checkHandler = (requestProperties, callback) => {
 handler._checks = {};
 
 // get a single check by phone number
-handler._checks.get = (requestProperties, callback) => {};
+handler._checks.get = (requestProperties, callback) => {
+    const checkID =
+        typeof requestProperties.queryString.check_id === 'string' &&
+        requestProperties.queryString.check_id.trim().length === 20
+            ? requestProperties.queryString.check_id
+            : false;
+    if (checkID) {
+        // lookup check
+        data.read('checks', checkID, (error, checkData) => {
+            if (!error && checkData) {
+                const check = parseJSON(checkData);
+                // verify token
+                const token =
+                    typeof requestProperties.headerObject.token === 'string' &&
+                    requestProperties.headerObject.token.trim().length === 20
+                        ? requestProperties.headerObject.token
+                        : false;
+                if (token) {
+                    tokenHandler._token.verify(token, check.userPhone, (isValidToken) => {
+                        if (isValidToken) {
+                            callback(200, check);
+                        } else {
+                            callback(403, {
+                                error: 'Authentication problem!',
+                            });
+                        }
+                    });
+                } else {
+                    callback(403, {
+                        error: 'Authentication problem!',
+                    });
+                }
+            } else {
+                callback(500, {
+                    error: 'There was a problem in your request!',
+                });
+            }
+        });
+    } else {
+        callback(400, {
+            error: 'There was a problem in your request!',
+        });
+    }
+};
 
 handler._checks.post = (requestProperties, callback) => {
     // request validation
