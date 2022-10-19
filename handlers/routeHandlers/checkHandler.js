@@ -197,7 +197,104 @@ handler._checks.post = (requestProperties, callback) => {
 };
 
 handler._checks.put = (requestProperties, callback) => {
-    // check the phone number if valid
+    // request validation
+    const checkID =
+        typeof requestProperties.body.id === 'string' &&
+        requestProperties.body.id.trim().length === 20
+            ? requestProperties.body.id
+            : false;
+
+    const protocol =
+        typeof requestProperties.body.protocol === 'string' &&
+        ['http', 'https'].indexOf(requestProperties.body.protocol) > -1
+            ? requestProperties.body.protocol
+            : false;
+
+    const method =
+        typeof requestProperties.body.method === 'string' &&
+        ['GET', 'POST', 'PUT', 'DELETE'].indexOf(requestProperties.body.method) > -1
+            ? typeof requestProperties.body.method
+            : false;
+
+    const url =
+        typeof requestProperties.body.url === 'string' &&
+        requestProperties.body.url.trim().length > 0
+            ? requestProperties.body.url
+            : false;
+
+    const successCodes =
+        typeof requestProperties.body.successCodes === 'object' &&
+        requestProperties.body.successCodes instanceof Array
+            ? requestProperties.body.successCodes
+            : false;
+
+    const timeout =
+        typeof requestProperties.body.timeout === 'number' &&
+        requestProperties.body.timeout % 1 === 0 &&
+        requestProperties.body.timeout >= 1 &&
+        requestProperties.body.timeout <= 5
+            ? requestProperties.body.timeout
+            : false;
+    if (checkID) {
+        if (protocol || url || method || successCodes || timeout) {
+            // lookup the check
+            data.read('checks', checkID, (err1, checkData) => {
+                if (!err1 && checkData) {
+                    const checkObject = parseJSON(checkData);
+                    // verify token
+                    const token =
+                        typeof requestProperties.headerObject.token === 'string' &&
+                        requestProperties.headerObject.token.trim().length === 20
+                            ? requestProperties.headerObject.token
+                            : false;
+                    tokenHandler._token.verify(token, checkObject.userPhone, (isValidToken) => {
+                        if (isValidToken) {
+                            if (protocol) {
+                                checkObject.protocol = protocol;
+                            }
+                            if (url) {
+                                checkObject.url = url;
+                            }
+                            if (method) {
+                                checkObject.method = method;
+                            }
+                            if (successCodes) {
+                                checkObject.successCodes = successCodes;
+                            }
+                            if (timeout) {
+                                checkObject.timeout = timeout;
+                            }
+                            data.update('checks', checkID, checkObject, (err2) => {
+                                if (!err2) {
+                                    callback(200, checkObject);
+                                } else {
+                                    callback(403, {
+                                        error: 'Error to updatig check!',
+                                    });
+                                }
+                            });
+                        } else {
+                            callback(403, {
+                                error: 'Authentication error!',
+                            });
+                        }
+                    });
+                } else {
+                    callback(500, {
+                        error: 'There was a problem in your request!',
+                    });
+                }
+            });
+        } else {
+            callback(400, {
+                error: 'There was a problem in your request!',
+            });
+        }
+    } else {
+        callback(400, {
+            error: 'There was a problem in your request!',
+        });
+    }
 };
 
 handler._checks.delete = (requestProperties, callback) => {};
