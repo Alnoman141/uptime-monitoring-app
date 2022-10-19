@@ -10,6 +10,7 @@ const data = require('../../lib/data');
 const { hash } = require('../../helpers/utilities');
 const { parseJSON } = require('../../helpers/utilities');
 const tokenHandler = require('./tokenHandler');
+const { maxCheckLimit } = require('../../helpers/enviroments');
 
 // module scaffolding
 const handler = {};
@@ -81,6 +82,19 @@ handler._checks.get = (requestProperties, callback) => {
                         tokenHandler._token.verify(token, userPhone, (isTokenValid) => {
                             if (isTokenValid) {
                                 const userObject = { ...parseJSON(userData) };
+                                const userChecks =
+                                    typeof userObject.checks === 'object' &&
+                                    userObject.checks instanceof Array
+                                        ? userObject.checks
+                                        : [];
+                                if (userChecks.length < maxCheckLimit) {
+
+                                } else {
+                                    callback(401, {
+                                        error: 'User has already reached max checks limit!',
+                                    });
+                                }
+                                // check user's max checks limit
                             } else {
                                 callback(401, {
                                     error: 'Unauthenticated!',

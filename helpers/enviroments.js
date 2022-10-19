@@ -15,6 +15,7 @@ environments.staging = {
     port: 3000,
     name: 'staging',
     secretKey: '1416',
+    maxCheckLimit: 5,
 };
 
 // production environment
@@ -22,6 +23,7 @@ environments.production = {
     port: 5000,
     name: 'production',
     ecretKey: '14161416',
+    maxCheckLimit: 5,
 };
 
 // determine which environment is passed
