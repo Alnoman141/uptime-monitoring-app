@@ -9,10 +9,14 @@
 const http = require('http');
 const { handleReqRes } = require('./helpers/handleReqRes');
 const environment = require('./helpers/enviroments');
-const data = require('./lib/data');
-
+const { sendNotification } = require('./helpers/notification');
 // app object - module scafollding
 const app = {};
+
+// send notification
+sendNotification('01911111111', 'Hello world', (err) => {
+    console.log('this is the error', err);
+});
 
 // create server
 app.createServer = () => {
