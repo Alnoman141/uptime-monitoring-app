@@ -84,7 +84,7 @@ handler._checks.post = (requestProperties, callback) => {
     const method =
         typeof requestProperties.body.method === 'string' &&
         ['GET', 'POST', 'PUT', 'DELETE'].indexOf(requestProperties.body.method) > -1
-            ? typeof requestProperties.body.method
+            ? requestProperties.body.method
             : false;
 
     const url =
